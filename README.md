@@ -6,7 +6,7 @@
 
 #### Contents:
 1. [Qiime processing of raw paired-end reads with DADA2](https://github.com/cckeneally/CH4_microbiome_analyses/blob/main/QIIME2Pre-Processing.md)
-2. [Main Analyses](https://github.com/cckeneally/CH4_microbiome_analyses/blob/main/Analysis_main.md)
+2. [Main Analyses](https://github.com/cckeneally/CH4_microbiome_analyses/blob/main/Analysis_Main.md)
 3. [PICRUSt Analyses](https://github.com/cckeneally/CH4_microbiome_analyses/blob/main/PICRUSt_Analysis_CH4.md)
 
 Raw reads are available at x
