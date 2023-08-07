@@ -1,9 +1,7 @@
-Coorong 16S Analyses (2021)
+Main Analyses
 ================
 Christopher Keneally
 07/8/2023
-
-\#opts_knit\$set(root.dir = “home/chriskeneally/Desktop/RWD”)
 
 ### Setup
 
