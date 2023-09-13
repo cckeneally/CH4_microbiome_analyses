@@ -122,23 +122,7 @@ taxonomy <- read_qza("~/Documents/Postgrad/Data/PhoenixOutputs/coorong16sanalysi
 taxtable <- taxonomy$data %>%
   as_tibble() %>%
   separate(Taxon, sep=";", c("Kingdom","Phylum","Class","Order","Family","Genus","Species"))
-taxtable
 ```
-
-    ## # A tibble: 18,442 × 9
-    ##    Feature.ID         Kingdom Phylum Class Order Family Genus Species Confidence
-    ##    <chr>              <chr>   <chr>  <chr> <chr> <chr>  <chr> <chr>        <dbl>
-    ##  1 6ad56f9b84e37a8de… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… <NA>         0.880
-    ##  2 190a40b9b984142cc… D_0__A… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      1.00 
-    ##  3 a4dd6d36ee0ced076… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      0.918
-    ##  4 60d7d5102ed73e81a… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      0.789
-    ##  5 23c4c99a9ea7109f6… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… <NA>         0.900
-    ##  6 af8744828d42c41f7… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      1.00 
-    ##  7 2381615305d705826… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__G…      1.00 
-    ##  8 44881109704520a5a… D_0__B… D_1__… D_2_… D_3_… D_4__… <NA>  <NA>         1.00 
-    ##  9 365d094b6d2180ecc… D_0__A… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      0.924
-    ## 10 e52401328fb788815… D_0__B… D_1__… D_2_… D_3_… D_4__… D_5_… D_6__u…      0.871
-    ## # ℹ 18,432 more rows
 
 #### Metadata boxplots
 
@@ -296,7 +280,7 @@ pcrplot <- p +
 p <- ggplot(metadata, aes(x=dep, y=CH4pw, fill = dep)
         ) + geom_boxplot() + stat_compare_means(paired=F,method = 'kruskal.test', label = "p.format", 
                                                 label.x.npc = "centre") +  scale_fill_jco()
-ch4pwplot <- p + labs(y = expression(paste('Porewater [CH'['4'], "] (", mu, "mol L" ^ -1, ")")))
+ch4pwplot <- p + labs(y = expression(paste('Porewater [CH'['4'], "] (nmol L" ^ -1, ")")))
 
 ch4pcrplot <- ggarrange(pcrplot, ch4pwplot, ncol = 2, nrow = 1, 
                align = "h", common.legend = T, widths = c(0.5, 0.4))
@@ -372,9 +356,9 @@ kruskal_test_results_df <- data.frame(Variable = names(kruskal_test_results),
                                       P_Value = kruskal_test_results)
 
 # Filter significant variables
-significance_level <- 0.05
+# significance_level <- 0.05
 significant_vars <- kruskal_test_results_df %>%
-  filter(P_Value < significance_level) %>%
+  #filter(P_Value < significance_level) %>%
   pull(Variable)
 
 # Function to perform the Dunn test and return the adjusted p-value
@@ -415,13 +399,13 @@ dunn_test_results_df <- data.frame(Variable = names(dunn_test_results),
                                    Adjusted_P_Value = dunn_test_results)
 
 # Filter significant variables based on adjusted p-values
-significant_vars_dunn <- dunn_test_results_df %>%
-  filter(Adjusted_P_Value < significance_level) %>%
-  pull(Variable)
+# significant_vars_dunn <- dunn_test_results_df %>%
+#   filter(Adjusted_P_Value < significance_level) %>%
+#   pull(Variable)
 
 # Convert the metadata data frame to long format for plotting
 metadata_long <- numeric_vars %>%
-  dplyr::select(dep, any_of(significant_vars_dunn)) %>%
+  #dplyr::select(dep, any_of(significant_vars_dunn)) %>%
   pivot_longer(cols = -dep, names_to = "Variable", values_to = "Value") %>%
   left_join(dunn_test_results_df, by = "Variable") %>%
   mutate(Adjusted_P_Value_Label = paste0(" (p = ", round(Adjusted_P_Value, 6), ")"))
@@ -435,25 +419,25 @@ custom_labeller <- function(labels) {
 # Create a facetted box plot for the significant variables after the Dunn test
 sigvarsplot <- ggplot(metadata_long, aes(x = dep, y = Value, fill = dep)) +
   geom_boxplot() +
-  facet_wrap(~ Variable, labeller = labeller(Variable = custom_labeller), ncol = 3, scales = "free_y") +
+  facet_wrap(~ Variable, labeller = labeller(Variable = custom_labeller), ncol = 4, scales = "free_y") +
   labs(y = "Value") +
   theme_bw() +
   theme(legend.position = "none",
         strip.background = element_blank(),
-        strip.text = element_text(size = 10))
+        strip.text = element_text(size = 10)) + scale_fill_jco()
 
 sigvarsplot
 ```
 
-    ## Warning: Removed 3 rows containing non-finite values (`stat_boxplot()`).
+    ## Warning: Removed 14 rows containing non-finite values (`stat_boxplot()`).
 
 ![](Analysis_Main_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
-ggplot2::ggsave("sigvarsplot*dep.tiff",  path = "~/Documents/Postgrad/Figures/June_Methane/metadata/", dpi = 300)
+ggplot2::ggsave("metadataDunn.tiff",  path = "~/Documents/Postgrad/Figures/June_Methane/metadata/", dpi = 300)
 ```
 
-    ## Warning: Removed 3 rows containing non-finite values (`stat_boxplot()`).
+    ## Warning: Removed 14 rows containing non-finite values (`stat_boxplot()`).
 
 #### Metadata Corr Matrix
 
@@ -461,7 +445,7 @@ ggplot2::ggsave("sigvarsplot*dep.tiff",  path = "~/Documents/Postgrad/Figures/Ju
 library(PerformanceAnalytics)
 
 #make selected columns in metadata df into list
-positions <- c(8:11, 13:21, 24, 27, 32:36)
+positions <- c(8:11, 13:21, 24, 27:28, 33:35)
 
 #Use distinct to delete duplicate rows from DF
 avgs <- metadata %>%
@@ -861,12 +845,83 @@ legend("topleft", legend = c("Perfect Fit Line", "Model Equation Line (y = 140.2
 # mgs covaries with mud + sand
 ```
 
-###### Pairwaise tests for figure 2
+###### Pairwaise tests for Table 1
 
 ``` r
-#Dep vs mcrA
-kwmcraprop <- kruskal.test(metadata$mgenproppcr ~ metadata$dep)
-kwmcraraw <- kruskal.test(metadata$mcrA_raw ~ metadata$Replicate)
+#Summary stats
+ch4pw_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_ch4pw = mean(CH4pw, na.rm = TRUE),  
+                   sd_ch4pw = sd(CH4pw, na.rm = TRUE), 
+                   n_ch4pw = sum(!is.na(CH4pw)),  
+                   SE_ch4pw = sd(CH4pw, na.rm = TRUE)/sqrt(sum(!is.na(CH4pw))))
+
+ch4wc_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_ch4wc = mean(CH4wc, na.rm = TRUE),  
+                   sd_ch4wc = sd(CH4wc, na.rm = TRUE), 
+                   n_ch4wc = sum(!is.na(CH4wc)),  
+                   SE_ch4wc = sd(CH4wc, na.rm = TRUE)/sqrt(sum(!is.na(CH4wc))))
+
+mcra_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_mcra = mean(mcrA_raw, na.rm = TRUE),  
+                   sd_mcra = sd(mcrA_raw, na.rm = TRUE), 
+                   n_mcra = sum(!is.na(mcrA_raw)),  
+                   SE_mcra = sd(mcrA_raw, na.rm = TRUE)/sqrt(sum(!is.na(mcrA_raw))))
+
+pro_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_pro = mean(pro_raw, na.rm = TRUE),  
+                   sd_pro = sd(pro_raw, na.rm = TRUE), 
+                   n_pro = sum(!is.na(pro_raw)),  
+                   SE_pro = sd(pro_raw, na.rm = TRUE)/sqrt(sum(!is.na(pro_raw))))
+
+ch4pw_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep          mean_ch4pw sd_ch4pw n_ch4pw SE_ch4pw
+    ##   <chr>             <dbl>    <dbl>   <int>    <dbl>
+    ## 1 Depositional      3579.    1069.      11     322.
+    ## 2 Other             1352.     914.      20     204.
+
+``` r
+ch4wc_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep          mean_ch4wc sd_ch4wc n_ch4wc SE_ch4wc
+    ##   <chr>             <dbl>    <dbl>   <int>    <dbl>
+    ## 1 Depositional       89.9     14.9      11     4.49
+    ## 2 Other              63.1     20.1      23     4.19
+
+``` r
+mcra_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep          mean_mcra   sd_mcra n_mcra  SE_mcra
+    ##   <chr>            <dbl>     <dbl>  <int>    <dbl>
+    ## 1 Depositional 21540589. 24634978.     11 7427725.
+    ## 2 Other          159729.   410876.     23   85673.
+
+``` r
+pro_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep              mean_pro       sd_pro n_pro      SE_pro
+    ##   <chr>               <dbl>        <dbl> <int>       <dbl>
+    ## 1 Depositional  3548130636.  3937953242.    11 1187337577.
+    ## 2 Other        10203065017. 15953121455.    23 3326455773.
+
+``` r
+#KWtests
+kwmcraraw <- kruskal.test(metadata$mcrA_raw ~ metadata$dep)
+kwproraw <- kruskal.test(metadata$pro_raw ~ metadata$dep)
+kwpw <- kruskal.test(metadata$CH4pw ~ metadata$dep)
+kwwc <- kruskal.test(metadata$CH4wc ~ metadata$dep)
 
 kwmcraraw
 ```
@@ -874,26 +929,21 @@ kwmcraraw
     ## 
     ##  Kruskal-Wallis rank sum test
     ## 
-    ## data:  metadata$mcrA_raw by metadata$Replicate
-    ## Kruskal-Wallis chi-squared = 12.987, df = 3, p-value = 0.004665
+    ## data:  metadata$mcrA_raw by metadata$dep
+    ## Kruskal-Wallis chi-squared = 14.359, df = 1, p-value = 0.000151
 
 ``` r
-#posthoc
-DunnTest(metadata$mgenproppcr ~ metadata$dep, method = "fdr")
+kwproraw
 ```
 
     ## 
-    ##  Dunn's test of multiple comparisons using rank sums : fdr  
+    ##  Kruskal-Wallis rank sum test
     ## 
-    ##                    mean.rank.diff    pval    
-    ## Other-Depositional          -17.5 1.5e-06 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## data:  metadata$pro_raw by metadata$dep
+    ## Kruskal-Wallis chi-squared = 1.0394, df = 1, p-value = 0.308
 
 ``` r
-#Replicate vs CH4 (pw)
-kwch4pw <-  kruskal.test(metadata$CH4pw ~ metadata$dep)
-kwch4pw
+kwpw
 ```
 
     ## 
@@ -903,42 +953,31 @@ kwch4pw
     ## Kruskal-Wallis chi-squared = 15.883, df = 1, p-value = 6.738e-05
 
 ``` r
-#posthoc
-DunnTest(metadata$CH4pw ~ metadata$dep, method = "fdr")
-```
-
-    ## 
-    ##  Dunn's test of multiple comparisons using rank sums : fdr  
-    ## 
-    ##                    mean.rank.diff    pval    
-    ## Other-Depositional          -13.6 6.7e-05 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-``` r
-#bank vs CH4 (wc)
-kwch4wc <-  kruskal.test(metadata$CH4wc ~ metadata$side)
-kwch4wc
+kwwc
 ```
 
     ## 
     ##  Kruskal-Wallis rank sum test
     ## 
-    ## data:  metadata$CH4wc by metadata$side
-    ## Kruskal-Wallis chi-squared = 25.662, df = 1, p-value = 4.068e-07
+    ## data:  metadata$CH4wc by metadata$dep
+    ## Kruskal-Wallis chi-squared = 9.1993, df = 1, p-value = 0.002421
 
 ``` r
-#posthoc (replicate)
-DunnTest(metadata$CH4wc ~ metadata$side, method = "fdr")
+# Collect p-values into a vector
+p_values <- c(kwmcraraw$p.value, kwproraw$p.value, kwpw$p.value, kwwc$p.value)
+
+# Adjust p-values using FDR method
+adjusted_p_values <- p.adjust(p_values, method = "fdr")
+
+# Create a named vector for better identification
+names(adjusted_p_values) <- c("kwmcraraw", "kwproraw", "kwpw", "kwwc")
+
+# Print or store the adjusted p-values
+print(adjusted_p_values)
 ```
 
-    ## 
-    ##  Dunn's test of multiple comparisons using rank sums : fdr  
-    ## 
-    ##     mean.rank.diff    pval    
-    ## W-E          -17.5 4.1e-07 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##    kwmcraraw     kwproraw         kwpw         kwwc 
+    ## 0.0003020975 0.3079530455 0.0002695262 0.0032281325
 
 #### Create Phyloseq Object
 
@@ -2961,22 +3000,41 @@ anova(depdisp)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-#Tukey to test
-TukeyHSD(depdisp)
+#permutest on betadisper obj
+permutest(depdisp)
 ```
 
-    ##   Tukey multiple comparisons of means
-    ##     95% family-wise confidence level
     ## 
-    ## Fit: aov(formula = distances ~ group, data = df)
+    ## Permutation test for homogeneity of multivariate dispersions
+    ## Permutation: free
+    ## Number of permutations: 999
     ## 
-    ## $group
-    ##                         diff        lwr       upr    p adj
-    ## Other-Depositional 0.1261195 0.04293219 0.2093068 0.004142
+    ## Response: Distances
+    ##           Df  Sum Sq  Mean Sq      F N.Perm Pr(>F)   
+    ## Groups     1 0.11836 0.118360 9.5368    999  0.006 **
+    ## Residuals 32 0.39715 0.012411                        
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
 #Adonis~dep
-permanova <- adonis2(braydis ~ metad$dep)
+adonis2(braydis ~ metad$dep)
+```
+
+    ## Permutation test for adonis under reduced model
+    ## Terms added sequentially (first to last)
+    ## Permutation: free
+    ## Number of permutations: 999
+    ## 
+    ## adonis2(formula = braydis ~ metad$dep)
+    ##           Df SumOfSqs      R2      F Pr(>F)    
+    ## metad$dep  1   1.8970 0.27484 12.128  0.001 ***
+    ## Residual  32   5.0054 0.72516                  
+    ## Total     33   6.9025 1.00000                  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 anosim(braydis, metad$dep)
 ```
 
@@ -2990,6 +3048,58 @@ anosim(braydis, metad$dep)
     ## 
     ## Permutation: free
     ## Number of permutations: 999
+
+``` r
+#Continuous vars
+adonis2(braydis ~ metad$organiccont+metad$bulkdensity+metad$psu +metad$mcrabypro)
+```
+
+    ## Permutation test for adonis under reduced model
+    ## Terms added sequentially (first to last)
+    ## Permutation: free
+    ## Number of permutations: 999
+    ## 
+    ## adonis2(formula = braydis ~ metad$organiccont + metad$bulkdensity + metad$psu + metad$mcrabypro)
+    ##                   Df SumOfSqs      R2       F Pr(>F)    
+    ## metad$organiccont  1   2.2093 0.32007 20.0465  0.001 ***
+    ## metad$bulkdensity  1   0.9561 0.13851  8.6754  0.001 ***
+    ## metad$psu          1   0.4150 0.06012  3.7656  0.005 ** 
+    ## metad$mcrabypro    1   0.1261 0.01827  1.1442  0.300    
+    ## Residual          29   3.1960 0.46302                   
+    ## Total             33   6.9025 1.00000                   
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+anosim(braydis, metad$organiccont+metad$bulkdensity+metad$psu)
+```
+
+    ## 
+    ## Call:
+    ## anosim(x = braydis, grouping = metad$organiccont + metad$bulkdensity +      metad$psu) 
+    ## Dissimilarity: bray 
+    ## 
+    ## ANOSIM statistic R: 0.8932 
+    ##       Significance: 0.001 
+    ## 
+    ## Permutation: free
+    ## Number of permutations: 999
+
+``` r
+vardisp <- betadisper(braydis, metad$organiccont+metad$bulkdensity+metad$psu)
+
+permutest(vardisp)
+```
+
+    ## 
+    ## Permutation test for homogeneity of multivariate dispersions
+    ## Permutation: free
+    ## Number of permutations: 999
+    ## 
+    ## Response: Distances
+    ##           Df   Sum Sq   Mean Sq      F N.Perm Pr(>F)
+    ## Groups    11 0.095598 0.0086907 0.9698    999    0.5
+    ## Residuals 22 0.197146 0.0089612
 
 ### Beta diversity: Homogeneity of group dispersions and compositional dissimilarity/similarity
 
@@ -3041,7 +3151,7 @@ data<-log((abund_table+1)/(rowSums(abund_table)+dim(abund_table)[2]))
 data<-as.data.frame(data)
  
 #Reference: http://www.bigre.ulb.ac.be/courses/statistics_bioinformatics/practicals/microarrays_berry_2010/berry_feature_selection.html
-kruskal.wallis.alpha=0.01
+kruskal.wallis.alpha=1
 kruskal.wallis.table <- data.frame()
 for (i in 1:dim(data)[2]) {
   ks.test <- kruskal.test(data[,i], g=groups)
@@ -5907,37 +6017,36 @@ prim.ord <- ordinate(
     ## Square root transformation
     ## Wisconsin double standardization
     ## Run 0 stress 0.09725172 
-    ## Run 1 stress 0.1199884 
-    ## Run 2 stress 0.1298127 
-    ## Run 3 stress 0.1067602 
-    ## Run 4 stress 0.100531 
-    ## Run 5 stress 0.1199884 
-    ## Run 6 stress 0.1170668 
-    ## Run 7 stress 0.1198799 
-    ## Run 8 stress 0.1328552 
-    ## Run 9 stress 0.1198798 
-    ## Run 10 stress 0.1199884 
-    ## Run 11 stress 0.1306962 
-    ## Run 12 stress 0.1235353 
-    ## Run 13 stress 0.09677707 
+    ## Run 1 stress 0.09677707 
     ## ... New best solution
-    ## ... Procrustes: rmse 0.01326004  max resid 0.05415867 
-    ## Run 14 stress 0.1199884 
-    ## Run 15 stress 0.1054844 
-    ## Run 16 stress 0.09677707 
-    ## ... New best solution
-    ## ... Procrustes: rmse 9.381853e-06  max resid 3.383506e-05 
+    ## ... Procrustes: rmse 0.01326055  max resid 0.05415918 
+    ## Run 2 stress 0.1201895 
+    ## Run 3 stress 0.1025068 
+    ## Run 4 stress 0.1223708 
+    ## Run 5 stress 0.1305805 
+    ## Run 6 stress 0.1225307 
+    ## Run 7 stress 0.1199884 
+    ## Run 8 stress 0.1222866 
+    ## Run 9 stress 0.1199884 
+    ## Run 10 stress 0.09677708 
+    ## ... Procrustes: rmse 2.880085e-05  max resid 8.191017e-05 
     ## ... Similar to previous best
-    ## Run 17 stress 0.1054843 
-    ## Run 18 stress 0.0967436 
+    ## Run 11 stress 0.1233463 
+    ## Run 12 stress 0.09965437 
+    ## Run 13 stress 0.1191929 
+    ## Run 14 stress 0.09725197 
+    ## ... Procrustes: rmse 0.01335489  max resid 0.05431727 
+    ## Run 15 stress 0.1005311 
+    ## Run 16 stress 0.1242074 
+    ## Run 17 stress 0.1270815 
+    ## Run 18 stress 0.1216038 
+    ## Run 19 stress 0.1170668 
+    ## Run 20 stress 0.0967436 
     ## ... New best solution
-    ## ... Procrustes: rmse 0.002266413  max resid 0.01087191 
-    ## Run 19 stress 0.0967436 
-    ## ... New best solution
-    ## ... Procrustes: rmse 6.137925e-06  max resid 2.304919e-05 
-    ## ... Similar to previous best
-    ## Run 20 stress 0.1199884 
-    ## *** Best solution repeated 1 times
+    ## ... Procrustes: rmse 0.002272563  max resid 0.010915 
+    ## *** Best solution was not repeated -- monoMDS stopping criteria:
+    ##     18: stress ratio > sratmax
+    ##      2: scale factor of the gradient < sfgrmin
 
 ``` r
 prim.ord$stress
