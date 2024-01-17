@@ -63,7 +63,7 @@ conda activate qiime2-2023.5
 eval "$(micromamba shell hook --shell=bash)"
 micromamba activate picrust2
 
-picrust2_pipeline.py -s /hpcfs/users/a1667276/resuspicrust/dna-sequences.fasta -i /hpcfs/users/a1667276/resuspicrust/biom_pi.biom -o /hpcfs/users/a1667276/resuspicrust/picrust2_out_pipeline -p 16 --max_nsti 0.7
+picrust2_pipeline.py -s /hpcfs/users/axxxxxxx/resuspicrust/dna-sequences.fasta -i /hpcfs/users/axxxxxxx/resuspicrust/biom_pi.biom -o /hpcfs/users/axxxxxxx/resuspicrust/picrust2_out_pipeline -p 16 --max_nsti 0.7
 
 conda deactivate
 
