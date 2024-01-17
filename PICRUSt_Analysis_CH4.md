@@ -154,7 +154,8 @@ daa_results_list <- pathway_errorbar(abundance = ko_abundance,
                                      Group = metadata$dep,
                                      p_values_threshold = 0.5, #plotting of all features selected regardless of signif
                                      order = "p_values",
-                                     select = c(Osmolytes),  #For desired analysis
+                                     select = c(Methanogens, Methylotrophic, 
+                                                Hydrogenotrophic, Acetoclastic),  #For desired analysis
                                      ko_to_kegg = FALSE,
                                      p_value_bar = T,
                                      colors = c('#0073C2FF', '#EFC000FF'),
@@ -200,11 +201,7 @@ joined_df <- joined_df %>% mutate(category = case_when(
 
 #Relevel methanogens to top for plot
 joined_df$category <- fct_relevel(joined_df$category, "Methanogens", after = 0)
-```
 
-    ## Warning: 1 unknown level in `f`: Methanogens
-
-``` r
 # Plot 1
 xl <- expression('log'[2]*' fold change')
 # a <- ggplot(joined_df, aes(log_2_fold_change, short_description, color = color_group)) +
