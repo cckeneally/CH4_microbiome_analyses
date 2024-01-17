@@ -25,8 +25,8 @@ full length with 13bp trim L/R to ensure paired end overlaps (V3-V4 region ~450b
 ```bash
 qiime dada2 denoise-paired \
 --i-demultiplexed-seqs paired-end-demux.qza \
---p-trim-left-f 13 \
---p-trim-left-r 13 \
+--p-trim-left-f 18 \
+--p-trim-left-r 20 \
 --p-trunc-len-f 300 \
 --p-trunc-len-r 300 \
 --o-table table.qza \
