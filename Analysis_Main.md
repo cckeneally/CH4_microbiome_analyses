@@ -1,7 +1,9 @@
-Main Analyses
+Coorong 16S Analyses (2021)
 ================
 Christopher Keneally
-07/8/2023
+2024-01-18
+
+\#opts_knit\$set(root.dir = “home/chriskeneally/Desktop/RWD”)
 
 ### Setup
 
@@ -171,8 +173,8 @@ wc_summary <- metad %>%
             SE_wc = sd(watercont)/sqrt(n()))
 
 oc_summary <- metad %>% 
-  group_by(dep, depth, side) %>%   
-  dplyr::summarise(mean_ph = mean(organiccont),  
+  group_by(dep) %>%   
+  dplyr::summarise(mean_oc = mean(organiccont),  
             sd_oc = sd(organiccont), 
             n_oc = n(),  
             SE_oc = sd(organiccont)/sqrt(n()))
@@ -227,7 +229,7 @@ ch4pw_summary <- metad %>%
             SE_ch4pw = sd(CH4pw)/sqrt(n()))
 
 sulfpw_summary <- metad %>% 
-  group_by(dep, depth, side) %>%   
+  group_by(dep) %>%   
   dplyr::summarise(mean_sulfpw = mean(Sulfatepw),  
             sd_sulfpw = sd(Sulfatepw), 
             n_sulfpw = n(),  
@@ -421,7 +423,7 @@ sigvarsplot <- ggplot(metadata_long, aes(x = dep, y = Value, fill = dep)) +
   labs(y = "Value") +
   theme_bw() +
   theme(legend.position = "none",
-        strip.background = element_blank(),
+        #strip.background = element_blank(),
         strip.text = element_text(size = 10)) + scale_fill_jco()
 
 sigvarsplot
@@ -587,7 +589,7 @@ rel_imp_perc
 # waterdepth        psu     temp_c     do_mgl 
 #   16.70379   30.42382   27.92660   21.77781
 
-avPlots(full_model)
+avPlots(full_model, id = FALSE)
 ```
 
 ![](Analysis_Main_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
@@ -756,7 +758,7 @@ rel_imp_perc
 # organiccont mgenproppcr   Sulfatepw 
 #    47.12476    26.20963    20.60766 
 
-avPlots(full_model_pw)
+avPlots(full_model_pw, id = FALSE)
 ```
 
 ![](Analysis_Main_files/figure-gfm/unnamed-chunk-7-5.png)<!-- -->
@@ -875,6 +877,20 @@ pro_summary <- metad %>%
                    n_pro = sum(!is.na(pro_raw)),  
                    SE_pro = sd(pro_raw, na.rm = TRUE)/sqrt(sum(!is.na(pro_raw))))
 
+mcrabypro_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_m = mean(mcrabypro, na.rm = TRUE),  
+                   sd_m = sd(mcrabypro, na.rm = TRUE), 
+                   n_m = sum(!is.na(mcrabypro)),  
+                   SE_m = sd(mcrabypro, na.rm = TRUE)/sqrt(sum(!is.na(mcrabypro))))
+
+om_summary <- metad %>% 
+  group_by(dep) %>%   
+  dplyr::summarise(mean_m = mean(organiccont, na.rm = TRUE),  
+                   sd_m = sd(organiccont, na.rm = TRUE), 
+                   n_m = sum(!is.na(organiccont)),  
+                   SE_m = sd(organiccont, na.rm = TRUE)/sqrt(sum(!is.na(organiccont))))
+
 ch4pw_summary
 ```
 
@@ -913,6 +929,26 @@ pro_summary
     ##   <chr>               <dbl>        <dbl> <int>       <dbl>
     ## 1 Depositional  3548130636.  3937953242.    11 1187337577.
     ## 2 Other        10203065017. 15953121455.    23 3326455773.
+
+``` r
+mcrabypro_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep           mean_m     sd_m   n_m    SE_m
+    ##   <chr>          <dbl>    <dbl> <int>   <dbl>
+    ## 1 Depositional 6.80    14.6        11 4.39   
+    ## 2 Other        0.00372  0.00929    23 0.00194
+
+``` r
+om_summary
+```
+
+    ## # A tibble: 2 × 5
+    ##   dep          mean_m  sd_m   n_m  SE_m
+    ##   <chr>         <dbl> <dbl> <int> <dbl>
+    ## 1 Depositional  22.4  0.629    11 0.190
+    ## 2 Other          6.46 3.35     23 0.698
 
 ``` r
 #KWtests
@@ -1269,8 +1305,8 @@ tax_table(ps)[tax_table(ps) == "Ambiguous_taxa"] <- ""
 tax_table(ps)[tax_table(ps) == "uncultured archaeon"] <- ""
 tax_table(ps)[tax_table(ps) == "uncultured organism"] <- ""
 
-ps <- ps %>% subset_taxa( Family!= "Mitochondria" | is.na(Family) & Order!="Chloroplast" | is.na(Class) ) 
-
+ps <- ps %>% subset_taxa( Family!= "Mitochondria" | is.na(Family) & Order!="Chloroplast" | is.na(Order) ) 
+ps <- ps %>% subset_taxa(Order!="Chloroplast")
 
 phylojune <- subset_samples(ps, month=="june")
 phylofeb <- subset_samples(ps, month=="february")
@@ -1279,17 +1315,17 @@ phyloseq1 <- subset_samples(ps, site != "blank")
 mean(sample_sums(phylojune)) #47944.03 ASVs
 ```
 
-    ## [1] 47944.03
+    ## [1] 47373.12
 
 ``` r
 phylojune #16691 Taxa
 ```
 
     ## phyloseq-class experiment-level object
-    ## otu_table()   OTU Table:         [ 16691 taxa and 34 samples ]
+    ## otu_table()   OTU Table:         [ 15958 taxa and 34 samples ]
     ## sample_data() Sample Data:       [ 34 samples by 47 sample variables ]
-    ## tax_table()   Taxonomy Table:    [ 16691 taxa by 7 taxonomic ranks ]
-    ## phy_tree()    Phylogenetic Tree: [ 16691 tips and 16652 internal nodes ]
+    ## tax_table()   Taxonomy Table:    [ 15958 taxa by 7 taxonomic ranks ]
+    ## phy_tree()    Phylogenetic Tree: [ 15958 tips and 15919 internal nodes ]
 
 ``` r
 #Export .biom for picrust
@@ -1299,17 +1335,17 @@ pi_ps <- phyloseq::prune_taxa(filter, ps)
 mean(sample_sums(pi_ps)) #46464.46 ASVs
 ```
 
-    ## [1] 46464.46
+    ## [1] 45986
 
 ``` r
 pi_ps #5063 Taxa
 ```
 
     ## phyloseq-class experiment-level object
-    ## otu_table()   OTU Table:         [ 5063 taxa and 48 samples ]
+    ## otu_table()   OTU Table:         [ 4916 taxa and 48 samples ]
     ## sample_data() Sample Data:       [ 48 samples by 47 sample variables ]
-    ## tax_table()   Taxonomy Table:    [ 5063 taxa by 7 taxonomic ranks ]
-    ## phy_tree()    Phylogenetic Tree: [ 5063 tips and 5045 internal nodes ]
+    ## tax_table()   Taxonomy Table:    [ 4916 taxa by 7 taxonomic ranks ]
+    ## phy_tree()    Phylogenetic Tree: [ 4916 tips and 4898 internal nodes ]
 
 ``` r
 library(biomformat)
@@ -1362,12 +1398,7 @@ methano_orders <- c("Methanosarcinales", "Methanobacteriales", "Methanococcales"
 methano_all <- subset_taxa(archaea21j, Order %in% methano_orders)
 
 library(microbiomeutilities)
-```
 
-    ## Warning: replacing previous import 'ggplot2::alpha' by 'microbiome::alpha' when
-    ## loading 'microbiomeutilities'
-
-``` r
 arch.bh <- format_to_besthit(archaea21j)
 
 tax_table(arch.bh)[tax_table(arch.bh) == "c__Asgardaeota"] <- "p__Asgardaeota"
@@ -1383,15 +1414,18 @@ arch21_relabund <- transform_sample_counts(
 arch21_agglom <- tax_glom(
   arch21_relabund, taxrank = 'Class')  
 arch21_dat <- psmelt(arch21_agglom)   
-arch21_dat$Order <- as.character(arch21_dat$Class)  
+arch21_dat$Class <- as.character(arch21_dat$Class)  
 
 arch21_dat %>% group_by(Class, dep) %>% 
   summarize(Abundance = sum(Abundance)) -> plot_df
 
-#Plot
-archbar <- ggplot(plot_df, 
+#colour blind palette library
+library(pals)
+
+# Your existing plot code
+archbar <- ggplot(arch21_dat, 
   aes(x = dep, 
-      y = Abundance, fill = Class)
+      y = Abundance, fill = Class, color = Class)
   ) +
   geom_bar(position = "fill", stat = "identity"
   ) + 
@@ -1401,14 +1435,16 @@ archbar <- ggplot(plot_df,
       # legend.key.width = unit(0.5, "cm")
   ) + 
   guides(fill = guide_legend(reverse = TRUE, 
-       nrow = 5 ,direction = "horizontal")
+       ncol = 5 ,direction = "horizontal")
   ) +
-  labs(y = "Relative Archaeal Abundance") + scale_fill_igv() + scale_color_igv() + coord_flip() + 
-  labs(fill="Archaeal Class")
+  labs(y = "Relative Archaeal Abundance", fill="Archaeal Class") + 
+  scale_fill_manual(values=unname(polychrome())) + 
+  scale_color_manual(values=unname(polychrome()), guide = "none") + 
+  coord_flip()
 
-ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/draft2", "archbar.tiff", device = 'tiff', dpi = 300)
+ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/Revised", "archbar.tiff", width = 13, height = 4, device = 'tiff', dpi = 300)
 
-ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/draft2", "archbar.png", width = 6, height = 7, device = 'png', dpi = 300)
+ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/Revised", "archbar.png", width = 13, height = 4, device = 'png', dpi = 300)
 
 print(archbar)
 ```
@@ -1425,50 +1461,360 @@ tax_table(bact.bh)[tax_table(bact.bh) == "c__Latescibacteria"] <- "p__Latescibac
 bact21_relabund <- transform_sample_counts(
   bact.bh, function(x) x/sum(x))                
 bact21_agglom <- tax_glom(
-  bact21_relabund, taxrank = 'Class')  
+  bact21_relabund, taxrank = 'Order')  
 bact21_dat <- psmelt(bact21_agglom)   
-bact21_dat$Class <- as.character(bact21_dat$Class)  
+bact21_dat$Class <- as.character(bact21_dat$Order)  
 
 prim_medians <- ddply(
-  bact21_dat,  ~Class,
+  bact21_dat,  ~Order,
   function(x) c(median=median(x$Abundance)))    #calc median
 prim_remainder <- prim_medians[
-  prim_medians$median <= 0.005,]$Class          #find phyla <0.05% abundance
-bact21_dat[bact21_dat$Class 
+  prim_medians$median <= 0.005,]$Order         #find phyla <0.05% abundance
+bact21_dat[bact21_dat$Order 
   %in% 
-prim_remainder,]$Class <- 'Other Bacterial Classes (<0.5%)'    #Rename them!
+prim_remainder,]$Order <- 'Other Bacterial Orders (<0.5%)'    #Rename them
 
-bact21_dat %>% group_by(Class, dep) %>% 
+premainder_list <- prim_medians %>% 
+  filter(median <= 0.005) %>%
+  arrange(median)  # Sorting by median
+
+premainder_list
+```
+
+    ##                                                       Order       median
+    ## 1                                                      1-20 0.000000e+00
+    ## 2                                                   113B434 0.000000e+00
+    ## 3                                               3051bac4-16 0.000000e+00
+    ## 4                                                    661239 0.000000e+00
+    ## 5                                           Acetobacterales 0.000000e+00
+    ## 6                    Acetothermia bacterium SCGC AAA255-C06 0.000000e+00
+    ## 7                                              ADurb.Bin180 0.000000e+00
+    ## 8                        Alphaproteobacteria Incertae Sedis 0.000000e+00
+    ## 9                                                      B108 0.000000e+00
+    ## 10                                                    B2M28 0.000000e+00
+    ## 11                                   bacterium ADurb.Bin236 0.000000e+00
+    ## 12              bacterium enrichment culture clone 24(2013) 0.000000e+00
+    ## 13                    bacterium enrichment culture clone 58 0.000000e+00
+    ## 14              bacterium enrichment culture clone 73(2013) 0.000000e+00
+    ## 15                                  bacterium YC-ZSS-LKJ186 0.000000e+00
+    ## 16                                             Beggiatoales 0.000000e+00
+    ## 17                                    Betaproteobacteriales 0.000000e+00
+    ## 18                                           Brachyspirales 0.000000e+00
+    ## 19                                           Brevinematales 0.000000e+00
+    ## 20                                                  c__4-29 0.000000e+00
+    ## 21                                          c__Aerophobetes 0.000000e+00
+    ## 22                                               c__Bacilli 0.000000e+00
+    ## 23                                        c__Berkelbacteria 0.000000e+00
+    ## 24                                             c__BHI80-139 0.000000e+00
+    ## 25                                      c__Chitinivibrionia 0.000000e+00
+    ## 26                                       c__Dehalococcoidia 0.000000e+00
+    ## 27                                                 c__DG-56 0.000000e+00
+    ## 28                                   c__Gammaproteobacteria 0.000000e+00
+    ## 29                                               c__Kazania 0.000000e+00
+    ## 30                                              c__LD1-PA32 0.000000e+00
+    ## 31                                         c__MAT-CR-M4-B07 0.000000e+00
+    ## 32                                        c__Microgenomatia 0.000000e+00
+    ## 33                                                c__MVP-15 0.000000e+00
+    ## 34                                                c__ODP123 0.000000e+00
+    ## 35                                           c__Omnitrophia 0.000000e+00
+    ## 36                                      c__Omnitrophicaeota 0.000000e+00
+    ## 37                                             c__P9X2b3D02 0.000000e+00
+    ## 38                                               c__PAUC34f 0.000000e+00
+    ## 39                          c__PAUC43f marine benthic group 0.000000e+00
+    ## 40                                          c__Pla3 lineage 0.000000e+00
+    ## 41                                          c__Poribacteria 0.000000e+00
+    ## 42                                          c__RBG-16-55-12 0.000000e+00
+    ## 43                               c__S0134 terrestrial group 0.000000e+00
+    ## 44                                      c__Schekmanbacteria 0.000000e+00
+    ## 45                                               c__SGST604 0.000000e+00
+    ## 46                                           c__Subgroup 17 0.000000e+00
+    ## 47                                           c__Subgroup 18 0.000000e+00
+    ## 48                                           c__Subgroup 26 0.000000e+00
+    ## 49                                            c__Subgroup 9 0.000000e+00
+    ## 50                                                  c__TA06 0.000000e+00
+    ## 51                                c__Thermodesulfovibrionia 0.000000e+00
+    ## 52                                          c__V2072-189E03 0.000000e+00
+    ## 53                                                 c__WPS-2 0.000000e+00
+    ## 54                                                   c__WS2 0.000000e+00
+    ## 55                                           Caldisericales 0.000000e+00
+    ## 56                   Calditrichaeota bacterium AABM5.125.24 0.000000e+00
+    ## 57           candidate division Kazan bacterium RBG_13_50_9 0.000000e+00
+    ## 58  candidate division WOR-1 bacterium RIFOXYA12_FULL_43_27 0.000000e+00
+    ## 59            candidate division WS2 bacterium ADurb.Bin280 0.000000e+00
+    ## 60         candidate division Zixibacteria bacterium SM1_73 0.000000e+00
+    ## 61                               Candidatus Abawacabacteria 0.000000e+00
+    ## 62                              Candidatus Campbellbacteria 0.000000e+00
+    ## 63               Candidatus Cloacimonetes bacterium 4572_55 0.000000e+00
+    ## 64                                Candidatus Falkowbacteria 0.000000e+00
+    ## 65                               Candidatus Kerfeldbacteria 0.000000e+00
+    ## 66                                Candidatus Kuenenbacteria 0.000000e+00
+    ## 67                             Candidatus Magasanikbacteria 0.000000e+00
+    ## 68          Candidatus Margulisbacteria bacterium GWF2_35_9 0.000000e+00
+    ## 69         Candidatus Marinimicrobia bacterium CG1_02_48_14 0.000000e+00
+    ## 70                               Candidatus Nealsonbacteria 0.000000e+00
+    ## 71                                Candidatus Nomurabacteria 0.000000e+00
+    ## 72                                  Candidatus Pacebacteria 0.000000e+00
+    ## 73                               Candidatus Portnoybacteria 0.000000e+00
+    ## 74                               Candidatus Roizmanbacteria 0.000000e+00
+    ## 75                               Candidatus Shapirobacteria 0.000000e+00
+    ## 76                                 Candidatus Woesebacteria 0.000000e+00
+    ## 77                                 Candidatus Wolfebacteria 0.000000e+00
+    ## 78                              Candidatus Yanofskybacteria 0.000000e+00
+    ## 79                                        Cardiobacteriales 0.000000e+00
+    ## 80                                                   CH2b56 0.000000e+00
+    ## 81                                       Chitinivibrionales 0.000000e+00
+    ## 82                                             Chlamydiales 0.000000e+00
+    ## 83                        Chloroflexi bacterium RBG_13_46_9 0.000000e+00
+    ## 84                                Clostridia Incertae Sedis 0.000000e+00
+    ## 85                                        Competibacterales 0.000000e+00
+    ## 86                                        Corynebacteriales 0.000000e+00
+    ## 87                                              Coxiellales 0.000000e+00
+    ## 88                                                      D90 0.000000e+00
+    ## 89                                          Dadabacteriales 0.000000e+00
+    ## 90                                        Dehalococcoidales 0.000000e+00
+    ## 91                                       Diplorickettsiales 0.000000e+00
+    ## 92                                                      EC3 0.000000e+00
+    ## 93       Elusimicrobia bacterium RIFCSPHIGHO2_02_FULL_39_36 0.000000e+00
+    ## 94                                          Endomicrobiales 0.000000e+00
+    ## 95                                                  eub62A3 0.000000e+00
+    ## 96                                             EV818SWSAP88 0.000000e+00
+    ## 97                                           Francisellales 0.000000e+00
+    ## 98                                               Frankiales 0.000000e+00
+    ## 99                                             FS117-23B-02 0.000000e+00
+    ## 100                                              Gemmatales 0.000000e+00
+    ## 101                                             GWA2-38-13b 0.000000e+00
+    ## 102                                               GWB1-42-6 0.000000e+00
+    ## 103                                                   H3.93 0.000000e+00
+    ## 104                                         Haloplasmatales 0.000000e+00
+    ## 105                                                   HOC36 0.000000e+00
+    ## 106                          Hyaloperonospora arabidopsidis 0.000000e+00
+    ## 107                                         JGI 0000069-P22 0.000000e+00
+    ## 108                                                   JTB23 0.000000e+00
+    ## 109                                             k__Bacteria 0.000000e+00
+    ## 110                                       Kiritimatiellales 0.000000e+00
+    ## 111                                            Kosmotogales 0.000000e+00
+    ## 112                                            Kryptoniales 0.000000e+00
+    ## 113                                       Ktedonobacterales 0.000000e+00
+    ## 114                                             KZNMV-5-B42 0.000000e+00
+    ## 115                                         Lactobacillales 0.000000e+00
+    ## 116                                         Latescibacteria 0.000000e+00
+    ## 117                                           Legionellales 0.000000e+00
+    ## 118                                          Limnochordales 0.000000e+00
+    ## 119                                              Lineage IV 0.000000e+00
+    ## 120                                         Magnetococcales 0.000000e+00
+    ## 121                                         Mariprofundales 0.000000e+00
+    ## 122                                               MB-C2-126 0.000000e+00
+    ## 123                                                  MBAE14 0.000000e+00
+    ## 124                                              MD2894-B20 0.000000e+00
+    ## 125                                         Methylococcales 0.000000e+00
+    ## 126                                       Micromonosporales 0.000000e+00
+    ## 127                                               ML602M-17 0.000000e+00
+    ## 128                                                 MSB-5B2 0.000000e+00
+    ## 129                                                MSB-5E12 0.000000e+00
+    ## 130                                                   MSBL2 0.000000e+00
+    ## 131                                                   NKB15 0.000000e+00
+    ## 132                                         Oligosphaerales 0.000000e+00
+    ## 133                                             OM182 clade 0.000000e+00
+    ## 134                                           Omnitrophales 0.000000e+00
+    ## 135                                                   OPB41 0.000000e+00
+    ## 136                                     Paracaedibacterales 0.000000e+00
+    ## 137                                          Pedosphaerales 0.000000e+00
+    ## 138                                         Phormidesmiales 0.000000e+00
+    ## 139                                            Pirellulales 0.000000e+00
+    ## 140                                            Pla1 lineage 0.000000e+00
+    ## 141                                        Planctomycetales 0.000000e+00
+    ## 142                                       Pseudonocardiales 0.000000e+00
+    ## 143                                             RBG-13-46-9 0.000000e+00
+    ## 144                                           Rickettsiales 0.000000e+00
+    ## 145                                                    S085 0.000000e+00
+    ## 146                                                 S1-3-65 0.000000e+00
+    ## 147                                  saltmarsh clone LCP-68 0.000000e+00
+    ## 148                                  saltmarsh clone LCP-89 0.000000e+00
+    ## 149                                             SAR11 clade 0.000000e+00
+    ## 150                                         Selenomonadales 0.000000e+00
+    ## 151                                           Sh765B-AG-111 0.000000e+00
+    ## 152                                           Sh765B-TzT-20 0.000000e+00
+    ## 153                                                  SJA-15 0.000000e+00
+    ## 154                                                  SM1A07 0.000000e+00
+    ## 155                                                 SM23-32 0.000000e+00
+    ## 156                                          Sneathiellales 0.000000e+00
+    ## 157                                       SPG12-343-353-B75 0.000000e+00
+    ## 158                                        Sphingomonadales 0.000000e+00
+    ## 159                                             SS1-B-02-17 0.000000e+00
+    ## 160                                                  t0.6.f 0.000000e+00
+    ## 161                                  Thermoanaerobacterales 0.000000e+00
+    ## 162                                          Thermoflexales 0.000000e+00
+    ## 163                                       Thiomicrospirales 0.000000e+00
+    ## 164                                   UBA10353 marine group 0.000000e+00
+    ## 165                                                 UBA4486 0.000000e+00
+    ## 166                                               vadinBA26 0.000000e+00
+    ## 167                                      Vampirovibrionales 0.000000e+00
+    ## 168                                             Vibrionales 0.000000e+00
+    ## 169                                           Victivallales 0.000000e+00
+    ## 170                                            SAR202 clade 1.920750e-05
+    ## 171                                          c__Lineage IIb 2.031323e-05
+    ## 172                            Candidatus Peregrinibacteria 2.031323e-05
+    ## 173                                                c__OM190 2.095865e-05
+    ## 174                                                   BD7-8 4.592676e-05
+    ## 175                                       Thermomicrobiales 5.249482e-05
+    ## 176                                         Phycisphaerales 5.571223e-05
+    ## 177                                        Gemmatimonadales 6.026044e-05
+    ## 178                                        c__Parcubacteria 6.067409e-05
+    ## 179                                                c__WOR-1 6.570377e-05
+    ## 180                                         Caulobacterales 7.042950e-05
+    ## 181                                            CG1-02-42-13 1.116582e-04
+    ## 182                                         Fusobacteriales 1.143043e-04
+    ## 183                                  c__WS6 (Dojkabacteria) 1.206033e-04
+    ## 184                             Absconditabacteriales (SR1) 1.293595e-04
+    ## 185                                          Solibacterales 1.358453e-04
+    ## 186                                            Petrotogales 1.458743e-04
+    ## 187                                           c__MD2902-B12 1.465794e-04
+    ## 188                                     Gastranaerophilales 1.469759e-04
+    ## 189                                       Thiohalorhabdales 1.531510e-04
+    ## 190                                                   OPB56 1.646433e-04
+    ## 191                                                    PB19 1.659953e-04
+    ## 192                                                 c__d142 1.739812e-04
+    ## 193                                                 c__WWE3 1.842390e-04
+    ## 194                                            c__vadinHA49 1.900389e-04
+    ## 195                                              c__FCPU426 1.906213e-04
+    ## 196                                         Micavibrionales 1.940586e-04
+    ## 197                                                   SZB50 1.961899e-04
+    ## 198                                     Solirubrobacterales 1.970122e-04
+    ## 199                                 Candidatus Peribacteria 2.210982e-04
+    ## 200                                                   DG-20 2.392345e-04
+    ## 201                                              Bacillales 2.452025e-04
+    ## 202                                      Halothiobacillales 2.499248e-04
+    ## 203                                     Methylacidiphilales 2.697657e-04
+    ## 204                                                AT-s2-59 2.828363e-04
+    ## 205                                         Paceibacterales 2.870346e-04
+    ## 206                                        Rhodovibrionales 2.961045e-04
+    ## 207                                      Hydrogenedentiales 3.043279e-04
+    ## 208                                     c__Margulisbacteria 3.116801e-04
+    ## 209                                 Acanthopleuribacterales 3.244276e-04
+    ## 210                                       Thalassobaculales 3.654556e-04
+    ## 211                                             c__WCHB1-81 3.682803e-04
+    ## 212                                           Micrococcales 3.702700e-04
+    ## 213                                            Napoli-4B-65 3.746642e-04
+    ## 214                                       c__Aegiribacteria 3.780048e-04
+    ## 215                                              Gaiellales 3.915825e-04
+    ## 216                                             Tenderiales 3.927419e-04
+    ## 217                                  saltmarsh clone LCP-67 4.049652e-04
+    ## 218                                               c__Rs-M47 4.193878e-04
+    ## 219                                        c__Acetothermiia 4.215269e-04
+    ## 220                                     Syntrophobacterales 4.397080e-04
+    ## 221                                              Babeliales 4.817958e-04
+    ## 222                                         Alteromonadales 4.994932e-04
+    ## 223                                                   PeM15 5.209513e-04
+    ## 224                                       Campylobacterales 5.236024e-04
+    ## 225                                      c__Gracilibacteria 5.239170e-04
+    ## 226                                                    GIF3 5.269593e-04
+    ## 227                                           Leptospirales 5.392204e-04
+    ## 228                                                WCHB1-41 5.718463e-04
+    ## 229                                      Puniceispirillales 5.811825e-04
+    ## 230                               Candidatus Kaiserbacteria 5.955000e-04
+    ## 231                                        Ardenticatenales 6.117880e-04
+    ## 232                                       Saccharimonadales 6.160903e-04
+    ## 233                               Bacteroidetes VC2.1 Bac22 6.472301e-04
+    ## 234                                           Synergistales 6.513403e-04
+    ## 235                                               c__LCP-89 6.663612e-04
+    ## 236                                                  MBNT15 6.718858e-04
+    ## 237                                    bacterium YC-LK-LKJ1 6.787574e-04
+    ## 238                                         Synechococcales 6.881604e-04
+    ## 239                                         c__Pla4 lineage 6.986077e-04
+    ## 240                                           Oligoflexales 7.208331e-04
+    ## 241                                               Ga0077536 7.437601e-04
+    ## 242                                              Nostocales 7.587789e-04
+    ## 243                                           Arenicellales 8.344004e-04
+    ## 244                                       Ignavibacteriales 8.887737e-04
+    ## 245                                               c__KD4-96 9.083906e-04
+    ## 246                                             RBG-13-54-9 9.767095e-04
+    ## 247                                         Fibrobacterales 1.042693e-03
+    ## 248                            SAR324 clade(Marine group B) 1.081681e-03
+    ## 249                                         c__Anaerolineae 1.264565e-03
+    ## 250                                                    FW22 1.324628e-03
+    ## 251                                          c__Subgroup 22 1.341690e-03
+    ## 252                                      Verrucomicrobiales 1.360803e-03
+    ## 253                        c__Marinimicrobia (SAR406 clade) 1.478560e-03
+    ## 254                                                 Sva0485 1.485992e-03
+    ## 255                                          Milano-WF1B-44 1.528371e-03
+    ## 256                                        Izimaplasmatales 1.532954e-03
+    ## 257                                                 c__BRC1 1.570397e-03
+    ## 258                                                   NB1-j 1.586402e-03
+    ## 259                                         Nitrosococcales 1.643534e-03
+    ## 260                                          Moduliflexales 1.686415e-03
+    ## 261                                           Nitrococcales 1.703597e-03
+    ## 262                                   Thermoanaerobaculales 1.953263e-03
+    ## 263                                           Clostridiales 1.975675e-03
+    ## 264                                             c__CK-2C2-2 2.010294e-03
+    ## 265                                              Opitutales 2.044588e-03
+    ## 266                                          c__Subgroup 21 2.098413e-03
+    ## 267                                        Rhodospirillales 2.149553e-03
+    ## 268                                          Rhodothermales 2.159424e-03
+    ## 269                                       Bdellovibrionales 2.177701e-03
+    ## 270                                                    GIF9 2.393097e-03
+    ## 271                                               Run-SP154 2.400133e-03
+    ## 272                                          Bradymonadales 2.416149e-03
+    ## 273                                  c__Alphaproteobacteria 2.751424e-03
+    ## 274                                            Cytophagales 2.896773e-03
+    ## 275                                         Halanaerobiales 2.911146e-03
+    ## 276                                      Desulfuromonadales 3.094482e-03
+    ## 277                                          Anaerolineales 3.205164e-03
+    ## 278                                                  c__JS1 3.332901e-03
+    ## 279                                         c__Zixibacteria 3.369496e-03
+    ## 280                                         Cloacimonadales 3.515392e-03
+    ## 281                                           Caldilineales 3.587103e-03
+    ## 282                                             Rhizobiales 3.643653e-03
+    ## 283                                       Oceanospirillales 4.058324e-03
+    ## 284                                         Aminicenantales 4.351716e-03
+
+``` r
+bact21_dat %>% group_by(Order, dep) %>% 
   summarize(Abundance = sum(Abundance)) -> plot_df
 
+# Ensure Order is a factor
+bact21_dat$Order <- as.factor(bact21_dat$Order)
+
+# Move "Other Bacterial Ordines (<0.01%)" to the start
+bact21_dat$Order <- factor(bact21_dat$Order, levels = c("Other Bacterial Orders (<0.5%)", setdiff(levels(bact21_dat$Order), "Other Bacterial Orders (<0.5%)")))
+
+
 #Plot
-bactbar <- ggplot(plot_df, 
+bactbar <- ggplot(bact21_dat, 
   aes(x = dep, 
-      y = Abundance, fill = Class)
+      y = Abundance, fill = Order, color = Order)
   ) +
   geom_bar(position = "fill", stat = "identity"
   ) + 
-  theme(axis.title.y = element_blank(), legend.position = "top", 
+  theme(axis.title.y = element_blank(), legend.position = "bottom", 
        # legend.text = element_text(angle=45, hjust = 0),
       #  legend.key.height = unit(0.5, "cm"),
       # legend.key.width = unit(0.5, "cm")
   ) + 
   guides(fill = guide_legend(reverse = TRUE, 
-       nrow = 3 ,direction = "horizontal")
+       ncol = 5 ,direction = "horizontal")
   ) +
-  labs(y = "Relative Bacterial Abundance") + scale_fill_igv() + scale_color_igv() + coord_flip() + 
-  labs(fill="Bacterial Class")
+  labs(y = "Relative Bacterial Abundance") + scale_fill_manual(values=unname(polychrome())) + scale_color_manual(values=unname(polychrome()), guide = "none") + coord_flip() + 
+  labs(fill="Bacterial Order")
 
 
-ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/draft2", "bactbar.tiff", 
+ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/Revised", "bactbar.tiff", width = 13, height = 4,
        device = 'tiff', dpi = 300)
+ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/Revised", "bactbar.png", width = 13, height = 4, 
+       device = 'png', dpi = 600)
+
+bactbar
 ```
+
+![](Analysis_Main_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 #### Kingdom level diffabund testing
 
 ``` r
+ps1noun <- phyloseq1 %>% subset_taxa( Kingdom!= "Unassigned")
+ps1_relabund <- transform_sample_counts(
+  ps1noun, function(x) x/sum(x))  
 king_agglom <- tax_glom(
-  phyloseq1, taxrank = 'Kingdom')  
+  ps1_relabund, taxrank = 'Kingdom')  
 king_dat <- psmelt(king_agglom) 
 
 ##############################################
@@ -1479,21 +1825,22 @@ kingabund <- king_dat %>%
 # Group the data and calculate mean abundance
 mean_abundance <- kingabund %>%
   group_by(Kingdom, dep) %>%
-  summarise(MeanAbundance = mean(Abundance, na.rm = TRUE))
+  dplyr::summarise(MeanAbundance = mean(Abundance, na.rm = TRUE),
+              SE = sd(Abundance, na.rm = TRUE) / sqrt(n()))
 # Function to perform the t-test for each Order
-perform_t_test <- function(data, order_name) {
-  depositional_data <- data %>% dplyr::filter(dep == "Depositional" & Kingdom == order_name) %>% pull(Abundance)
-  other_data <- data %>% dplyr::filter(dep == "Other" & Kingdom == order_name) %>% pull(Abundance)
+perform_t_test <- function(data, tax_name) {
+  depositional_data <- data %>% dplyr::filter(dep == "Depositional" & Kingdom == tax_name) %>% pull(Abundance)
+  other_data <- data %>% dplyr::filter(dep == "Other" & Kingdom == tax_name) %>% pull(Abundance)
   
   t_test_result <- t.test(depositional_data, other_data)
   return(t_test_result)
 }
 
-unique_orders <- unique(kingabund$Kingdom)
+unique_tax <- unique(kingabund$Kingdom)
 # Perform the t-test for each Order and store the results
-t_test_results <- lapply(unique_orders, function(order_name) perform_t_test(kingabund, order_name))
+t_test_results <- lapply(unique_tax, function(tax_name) perform_t_test(kingabund, tax_name))
 # Combine the results with the Order names
-t_test_results_with_order <- setNames(t_test_results, unique_orders)
+t_test_results_with_order <- setNames(t_test_results, unique_tax)
 
 t_test_results_with_order
 ```
@@ -1503,13 +1850,13 @@ t_test_results_with_order
     ##  Welch Two Sample t-test
     ## 
     ## data:  depositional_data and other_data
-    ## t = -1.4246, df = 35.544, p-value = 0.163
+    ## t = -4.7482, df = 24.22, p-value = 7.709e-05
     ## alternative hypothesis: true difference in means is not equal to 0
     ## 95 percent confidence interval:
-    ##  -10785.75   1887.48
+    ##  -0.18763344 -0.07397489
     ## sample estimates:
     ## mean of x mean of y 
-    ##  39822.28  44271.41 
+    ## 0.7871638 0.9179679 
     ## 
     ## 
     ## $Archaea
@@ -1517,32 +1864,24 @@ t_test_results_with_order
     ##  Welch Two Sample t-test
     ## 
     ## data:  depositional_data and other_data
-    ## t = 4.9411, df = 29.526, p-value = 2.86e-05
+    ## t = 4.7482, df = 24.22, p-value = 7.709e-05
     ## alternative hypothesis: true difference in means is not equal to 0
     ## 95 percent confidence interval:
-    ##  3621.870 8731.092
+    ##  0.07397489 0.18763344
     ## sample estimates:
-    ## mean of x mean of y 
-    ## 10221.722  4045.241 
-    ## 
-    ## 
-    ## $Unassigned
-    ## 
-    ##  Welch Two Sample t-test
-    ## 
-    ## data:  depositional_data and other_data
-    ## t = 0.88634, df = 17.558, p-value = 0.3874
-    ## alternative hypothesis: true difference in means is not equal to 0
-    ## 95 percent confidence interval:
-    ##  -13.25907  32.55025
-    ## sample estimates:
-    ## mean of x mean of y 
-    ## 11.611111  1.965517
+    ##  mean of x  mean of y 
+    ## 0.21283623 0.08203207
 
 ``` r
-#Bacteria 
-#t = -1.9443
-#df = 35.459
+#Bacteria = mean 79% in dep, 92% in other
+#t = -4.8031
+#df = 24.262
+#p = <0.0001
+
+#Arch = mean 21% in dep, 8% in other
+#t = 4.8031
+#df = 24.262
+#p = <0.0001
 ```
 
 #### Subsets methanogen & Tax analyses
@@ -4721,6 +5060,519 @@ for (taxon in taxa_names) {
 }
 ```
 
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
+    ## Warning in cor.test.default(abund_table[[taxon]], merged_data$CH4pw, method =
+    ## "spearman"): Cannot compute exact p-value with ties
+
 ``` r
 # Print the results
 print(correlation_results)
@@ -6636,318 +7488,3 @@ print(plot.composition.relAbun)
 ```
 
 ![](Analysis_Main_files/figure-gfm/unnamed-chunk-36-2.png)<!-- -->
-
-\#Prep PS object for SpeicEasi
-
-``` r
-microbiome::summarize_phyloseq(phylojune)
-```
-
-    ## [[1]]
-    ## [1] "1] Min. number of reads = 22074"
-    ## 
-    ## [[2]]
-    ## [1] "2] Max. number of reads = 69712"
-    ## 
-    ## [[3]]
-    ## [1] "3] Total number of reads = 1630097"
-    ## 
-    ## [[4]]
-    ## [1] "4] Average number of reads = 47944.0294117647"
-    ## 
-    ## [[5]]
-    ## [1] "5] Median number of reads = 47755"
-    ## 
-    ## [[6]]
-    ## [1] "7] Sparsity = 0.926769269807258"
-    ## 
-    ## [[7]]
-    ## [1] "6] Any OTU sum to 1 or less? YES"
-    ## 
-    ## [[8]]
-    ## [1] "8] Number of singletons = 5376"
-    ## 
-    ## [[9]]
-    ## [1] "9] Percent of OTUs that are singletons \n        (i.e. exactly one read detected across all samples)9.11868671739261"
-    ## 
-    ## [[10]]
-    ## [1] "10] Number of sample variables are: 47"
-    ## 
-    ## [[11]]
-    ##  [1] "month"                         "ctrl"                         
-    ##  [3] "is.neg"                        "site"                         
-    ##  [5] "side"                          "depth"                        
-    ##  [7] "temp_c"                        "do_mgl"                       
-    ##  [9] "cond"                          "psu"                          
-    ## [11] "turb_ntu"                      "ph"                           
-    ## [13] "watercont"                     "organiccont"                  
-    ## [15] "bulkdensity"                   "meangrainsize"                
-    ## [17] "D50"                           "sand"                         
-    ## [19] "mud"                           "shells"                       
-    ## [21] "ruppia"                        "Ruppia.Presence"              
-    ## [23] "waterdepth"                    "Replicate"                    
-    ## [25] "dep"                           "mcrA_raw"                     
-    ## [27] "mcrabypro"                     "mcrA_mean"                    
-    ## [29] "pro_raw"                       "log16sr"                      
-    ## [31] "pro_mean"                      "CH4pw"                        
-    ## [33] "Sulfatepw"                     "CH4wc"                        
-    ## [35] "Sulfatewc"                     "glycine_betaine_biosynth"     
-    ## [37] "glycine_betaine_degradation"   "mgen_superpath"               
-    ## [39] "Acetatoclastic"                "H2.CO2"                       
-    ## [41] "Ass_sulfate_red"               "trehalose_biosynth"           
-    ## [43] "methanogenesis_methanol"       "methanogenesis_trimethylamine"
-    ## [45] "methanogenesis_methylamine"    "methanogenesis_methylcomp"    
-    ## [47] "methylotrophic"
-
-``` r
-# OTU table  
-otu_tab <- microbiome::abundances(phylojune)
-# check 
-otu_tab[1:5,1:5] # for my table show me [1 to 5 rows, 1 to 5 columns]
-```
-
-    ##                                  T1D1_1 T1D1_2 T1D2_1 T1D2_2 T1D2_3
-    ## 04f728953845ddde86934a0a3e02925f      0      0      0      0      0
-    ## c729554d8378b0eb2a0e8b1def2e3db8      0      0      0      0      0
-    ## 2270ca1b7393c0e5f103e4ad5f827827      0      0      0      0      0
-    ## b1f7c8c5ae260e9e16a2e1c0c11b0d66      0      0      0      0      0
-    ## 0e9483d29058ced8b8d00af75668973a      0      0      0      0      0
-
-``` r
-# Taxonomy table
-tax_tab <- phyloseq::tax_table(phylojune)
-# check 
-tax_tab[1:5,1:5] # for my table show me [1 to 5 otu ids, 1 to 5 first five ranks]
-```
-
-    ## Taxonomy Table:     [5 taxa by 5 taxonomic ranks]:
-    ##                                  Kingdom      Phylum          
-    ## 04f728953845ddde86934a0a3e02925f "Bacteria"   NA              
-    ## c729554d8378b0eb2a0e8b1def2e3db8 "Bacteria"   NA              
-    ## 2270ca1b7393c0e5f103e4ad5f827827 "Bacteria"   "Proteobacteria"
-    ## b1f7c8c5ae260e9e16a2e1c0c11b0d66 "Archaea"    "Euryarchaeota" 
-    ## 0e9483d29058ced8b8d00af75668973a "Unassigned" NA              
-    ##                                  Class                
-    ## 04f728953845ddde86934a0a3e02925f NA                   
-    ## c729554d8378b0eb2a0e8b1def2e3db8 NA                   
-    ## 2270ca1b7393c0e5f103e4ad5f827827 "Deltaproteobacteria"
-    ## b1f7c8c5ae260e9e16a2e1c0c11b0d66 "Thermoplasmata"     
-    ## 0e9483d29058ced8b8d00af75668973a NA                   
-    ##                                  Order                               
-    ## 04f728953845ddde86934a0a3e02925f NA                                  
-    ## c729554d8378b0eb2a0e8b1def2e3db8 NA                                  
-    ## 2270ca1b7393c0e5f103e4ad5f827827 "Desulfobacterales"                 
-    ## b1f7c8c5ae260e9e16a2e1c0c11b0d66 "Marine Benthic Group D and DHVEG-1"
-    ## 0e9483d29058ced8b8d00af75668973a NA                                  
-    ##                                  Family              
-    ## 04f728953845ddde86934a0a3e02925f NA                  
-    ## c729554d8378b0eb2a0e8b1def2e3db8 NA                  
-    ## 2270ca1b7393c0e5f103e4ad5f827827 "Desulfobacteraceae"
-    ## b1f7c8c5ae260e9e16a2e1c0c11b0d66 NA                  
-    ## 0e9483d29058ced8b8d00af75668973a NA
-
-``` r
-# accessing the OTUids 
-taxa_names(phylojune)[1:5] # print first 5 ids
-```
-
-    ## [1] "04f728953845ddde86934a0a3e02925f" "c729554d8378b0eb2a0e8b1def2e3db8"
-    ## [3] "2270ca1b7393c0e5f103e4ad5f827827" "b1f7c8c5ae260e9e16a2e1c0c11b0d66"
-    ## [5] "0e9483d29058ced8b8d00af75668973a"
-
-``` r
-tax_table(phylojune)[tax_table(phylojune) == "uncultured"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "Chloroplast"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured euryarchaeote"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured crenarchaeote"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 20c-10"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured haloarchaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Halobacteriales archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 2MT16"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Methanosarcinales archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon VC2.1 Arc6"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Thermoplasmatales archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Thermoplasmata archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "unidentified archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "unidentified marine bacterioplankton"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 20c-39"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archeon 'KTK 4A'"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured sediment archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 19b-26"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 20c-52"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon TA1f2"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured eukaryote"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 19a-29"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon 19b-39"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured euryarchaeote VAL31-1"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Firmicutes bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured microorganism"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Chloroflexi bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Aminicenantes bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured sediment bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured proteobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured spirochete"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured cyanobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "possible genus 03"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured soil bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division SR1 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured marine bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division WS6 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured anaerobic bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured deep-sea bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Flavobacterium sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Microgenomates group bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured KB1 group bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Dehalococcoides sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Chlorobi bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured delta proteobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured prokaryote"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured bacterium HF0500_03M05"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Candidatus Gracilibacteria bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Parcubacteria group bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Dehalococcoidia bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Anaerolineae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Actinomycetales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uuncultured Clostridia bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Lentisphaerae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured actinomycete"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured soil bacterium PBS-III-18"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division BRC1 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured soil bacterium PBS-III-4"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured actinobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Latescibacteria bacterium"] <- "Latescibacteria"
-tax_table(phylojune)[tax_table(phylojune) == "uncultured bacterium mle1-16"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured soil bacterium PBS-III-30"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Verrucomicrobia bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Acidobacteria bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Omnitrophica bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Kiritimatiellaeota bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Verrucomicrobium sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured planctomycete"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Planctomyces sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Planctomycetales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Deferribacteres bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Chitinivibrionia bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Caldithrix sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division TA06 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Clostridia bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured verrucomicrobium DEV007"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Geobacter sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division GN04 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Ignavibacteriales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Bacteroidetes bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Cytophagales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Epsilonproteobacteria bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Bacteroidetes/Chlorobi group bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured gamma proteobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Cytophaga sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division KSB1 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Bacteroidales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Acidobacteriaceae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Syntrophobacterales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Actinobacteridae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured forest soil bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Gemmatimonadetes bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Gloeobacter sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured low G+C Gram-positive bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured alpha proteobacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon"] <- "uncultured bacterium zdt-33i5"
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Desulfuromonadales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured compost bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured bacterium zdt-33i5"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Rickettsiales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Ochrobactrum sp."] <- "Ochrobactrum"
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Rhizobiales bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Marinobacter sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured candidate division GN06 bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "Verruc-01"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "Unknown Family"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured bacterium GR-WP33-58"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Polyangiaceae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Kofleriaceae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured eubacterium AB16"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Desulfobulbaceae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Geobacteraceae bacterium"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured Marinobacter sp."] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "marine metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "hypersaline lake metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "wastewater metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "bioreactor metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "umicrobial mat metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "anaerobic digester metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "hydrothermal vent metagenome"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "Ambiguous_taxa"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured archaeon"] <- ""
-tax_table(phylojune)[tax_table(phylojune) == "uncultured organism"] <- ""
-
-
-taxa_names(phylojune) <- paste0("ASV", seq(ntaxa(phylojune)))
-#besthit
-ps.bh <- format_to_besthit(phylojune)
-
-ps.dep <- subset_samples(ps.bh, dep == "Depositional")
-ps.nodep <- subset_samples(ps.bh, dep == "Other")
-
-#ps.glom.order <-  
-#besthitfiltered = filter_taxa(GlobalPatterns, function(x) sum(x > 3) > (0.2*length(x)), TRUE)
-```
-
-# Core & shared taxa
-
-``` r
-require(eulerr) # for euler diagrams
-
-pseq.rel <- microbiome::transform(phylojune, "compositional")
-
-#need taxnames
-# format names
-pseq.rel.f <- format_to_besthit(pseq.rel)
-
-groups <- unique(as.character(meta(pseq.rel.f)$dep))
-print(groups)
-```
-
-    ## [1] "Depositional" "Other"
-
-``` r
-list_core <- c() # an empty object to store information
-
-for (n in groups){ # for each variable n in groups
-    #print(paste0("Identifying Core Taxa for ", n))
-    
-    ps.sub <- subset_samples(pseq.rel.f, dep == n) # Choose sample from groups by n
-    
-    core_m <- core_members(ps.sub, # ps.sub is phyloseq selected with only samples from g 
-                           detection = 0, # 0.001 in atleast 90% samples 
-                           prevalence = 0)
-    print(paste0("No. of core taxa in ", n, " : ", length(core_m))) # print core taxa identified in each group.
-    list_core[[n]] <- core_m # add to a list core taxa for each group.
-    #print(list_core)
-}
-```
-
-    ## [1] "No. of core taxa in Depositional : 5198"
-    ## [1] "No. of core taxa in Other : 10043"
-
-``` r
-# Specify colors and plot venn
-# supplying colors in the order they appear in list_core
-library(gplots)
-mycols <- c('Depositional'="#d6e2e9", 'Other'="#cbf3f0") 
-venn <- venn(list_core)
-plot(venn, quantities = list(type = c("percent", "counts")), fills = mycols)
-```
-
-![](Analysis_Main_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
-
-``` r
-#Other method
-require(MicEco)
-euler <- ps_euler(pseq.rel.f, "dep", shape = "ellipse", quantities = list(type=c("percent","counts"), font = 2), labels = list(cex = 1), fills = mycols) 
-euler
-```
-
-![](Analysis_Main_files/figure-gfm/unnamed-chunk-38-2.png)<!-- -->

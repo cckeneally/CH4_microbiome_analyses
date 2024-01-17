@@ -1,7 +1,7 @@
 PICRUSt_Analysis_CH4
 ================
 Christopher Keneally
-2023-08-04
+2024-01-18
 
 # PICRUSt pre-processing
 
@@ -72,30 +72,39 @@ conda deactivate
 
 # GGPICRUST2 analysis
 
-``` r
-#Libs
-library(readr)
-library(ggpicrust2)
-library(tibble)
-library(tidyverse)
-library(ggprism)
-library(patchwork)
-library(GGally)
-library(compositions)
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  merged_data$mcrA_mean
+    ## W = 0.5815, p-value = 1.146e-08
 
-setwd("~/Documents/Postgrad/Data/Resuspension/PICRUST/picrust2_out_pipeline/KO_metagenome_out")
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  merged_data$K00399_relative
+    ## W = 0.9261, p-value = 0.02412
 
-#load data
-abundance_file <- "pred_metagenome_unstrat.tsv"
-metadata <- read_tsv("sample-metadata.tsv")
-metadata <- metadata[metadata$dep %in% c("Depositional", "Other"), ]
+    ## Warning in cor.test.default(merged_data$K00399_rel_adjusted,
+    ## merged_data$mcrabypro, : Cannot compute exact p-value with ties
 
-ko_abundance <- read.delim("pred_metagenome_unstrat.tsv")
-rownames(ko_abundance) <- ko_abundance$function.
-ko_abundance <- ko_abundance[, -1]
-#Define grouping variable
-group <- "dep"
-```
+    ## 
+    ##  Spearman's rank correlation rho
+    ## 
+    ## data:  merged_data$K00399_rel_adjusted and merged_data$mcrabypro
+    ## S = 1798.5, p-value = 1.225e-06
+    ## alternative hypothesis: true rho is not equal to 0
+    ## sample estimates:
+    ##       rho 
+    ## 0.7252025
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    ## Transformation introduced infinite values in continuous y-axis
 
 ## Running GGPICRUST2 functions
 
@@ -109,15 +118,15 @@ study on methane production.
 #### 1.1 Default GGPICRUST2 pathway plot
 
 ``` r
+#If using ALDEx2, you'll need to filter the df for a specific test
+#ko_sub_method_results_df \<- ko_daa_results_df[ko_daa_results_df\$method == "ALDEx2_Wilcoxon rank test", ]
+
 ko_daa_results_df <-pathway_daa(abundance = ko_abundance,
                                 metadata = metadata,
                                 group = group,
                                 daa_method = "DESeq2",
                                 select = NULL,
                                 reference = NULL)
-
-#If using ALDEx2, you'll need to filter the df for a specific test
-#ko_sub_method_results_df \<- ko_daa_results_df[ko_daa_results_df\$method == "ALDEx2_Wilcoxon rank test", ]
 
 ko_annotated_sub_method_results_df <- pathway_annotation(file = NULL,
                                                          pathway = "KO",
@@ -134,18 +143,18 @@ Hydrogenotrophic <- c("K00201", "K00672", "K01499",
                       "K00319", "K00320", "K00577",
                       "K00578", "K00579", "K00580",
                       "K00581", "K00582", "K00583",
-                      "K00584")
-Acetoclastic <- c("K01895", "K00193", "K00197", "K00194")
+                      "K00584", "K14093")
+Acetoclastic <- c("K01895", "K00193", "K00197", "K00194", "K01762")
 Methanotrophs <- c("K10944", "K10945", "K10946", "K161157")
 SRB <- c("K11180", "K11181")
+Osmolytes <- c("K02168", "K07811")
 
 daa_results_list <- pathway_errorbar(abundance = ko_abundance,
                                      daa_results_df = ko_annotated_sub_method_results_df,
                                      Group = metadata$dep,
-                                     p_values_threshold = 0.8, #plotting of all features selected regardless of signif
+                                     p_values_threshold = 0.5, #plotting of all features selected regardless of signif
                                      order = "p_values",
-                                     select = c(Methanogens, Methylotrophic, Hydrogenotrophic, 
-                                                Acetoclastic, Methanotrophs, SRB),
+                                     select = c(Osmolytes),  #For desired analysis
                                      ko_to_kegg = FALSE,
                                      p_value_bar = T,
                                      colors = c('#0073C2FF', '#EFC000FF'),
@@ -153,7 +162,7 @@ daa_results_list <- pathway_errorbar(abundance = ko_abundance,
 daa_results_list
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 Looks okay, but we can pull the data out and replot.
 
@@ -185,12 +194,17 @@ joined_df <- joined_df %>% mutate(category = case_when(
   feature %in% Acetoclastic ~ "Acetoclastic",
   feature %in% Methanotrophs ~ "Methanotrophs",
   feature %in% SRB ~ "Sulfate Reduction",
+  feature %in% Osmolytes ~ "Osmolytes",
   TRUE ~ "other" # default case if none of the above conditions are met
 ))
 
 #Relevel methanogens to top for plot
 joined_df$category <- fct_relevel(joined_df$category, "Methanogens", after = 0)
+```
 
+    ## Warning: 1 unknown level in `f`: Methanogens
+
+``` r
 # Plot 1
 xl <- expression('log'[2]*' fold change')
 # a <- ggplot(joined_df, aes(log_2_fold_change, short_description, color = color_group)) +
@@ -213,7 +227,7 @@ a <- ggplot(joined_df, aes(log_2_fold_change, short_description, color = color_g
 a
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 Looks okay, now we’ll make the other half
 
@@ -264,7 +278,7 @@ b <- ggplot(joined_df, aes(y = short_description, x = mean, fill = group)) +
 b
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 Now combine with ggpubr
 
@@ -276,7 +290,7 @@ c <- ggarrange(a, b, ncol = 2, nrow = 1,
 c
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/draft2", "PICRUST2DESEQ2_Methanos_Final.png",
@@ -293,6 +307,8 @@ setwd("~/Documents/Postgrad/Data/Resuspension/PICRUST/picrust2_out_pipeline/KO_m
 kegg_abundance <- ko2kegg_abundance("pred_metagenome_unstrat.tsv")
 ```
 
+    ##   |                                                                              |                                                                      |   0%  |                                                                              |                                                                      |   1%  |                                                                              |=                                                                     |   1%  |                                                                              |=                                                                     |   2%  |                                                                              |==                                                                    |   2%  |                                                                              |==                                                                    |   3%  |                                                                              |===                                                                   |   4%  |                                                                              |===                                                                   |   5%  |                                                                              |====                                                                  |   5%  |                                                                              |====                                                                  |   6%  |                                                                              |=====                                                                 |   7%  |                                                                              |=====                                                                 |   8%  |                                                                              |======                                                                |   8%  |                                                                              |======                                                                |   9%  |                                                                              |=======                                                               |   9%  |                                                                              |=======                                                               |  10%  |                                                                              |========                                                              |  11%  |                                                                              |========                                                              |  12%  |                                                                              |=========                                                             |  12%  |                                                                              |=========                                                             |  13%  |                                                                              |==========                                                            |  14%  |                                                                              |==========                                                            |  15%  |                                                                              |===========                                                           |  15%  |                                                                              |===========                                                           |  16%  |                                                                              |============                                                          |  17%  |                                                                              |============                                                          |  18%  |                                                                              |=============                                                         |  18%  |                                                                              |=============                                                         |  19%  |                                                                              |==============                                                        |  20%  |                                                                              |==============                                                        |  21%  |                                                                              |===============                                                       |  21%  |                                                                              |===============                                                       |  22%  |                                                                              |================                                                      |  22%  |                                                                              |================                                                      |  23%  |                                                                              |================                                                      |  24%  |                                                                              |=================                                                     |  24%  |                                                                              |=================                                                     |  25%  |                                                                              |==================                                                    |  25%  |                                                                              |==================                                                    |  26%  |                                                                              |===================                                                   |  26%  |                                                                              |===================                                                   |  27%  |                                                                              |===================                                                   |  28%  |                                                                              |====================                                                  |  28%  |                                                                              |====================                                                  |  29%  |                                                                              |=====================                                                 |  29%  |                                                                              |=====================                                                 |  30%  |                                                                              |======================                                                |  31%  |                                                                              |======================                                                |  32%  |                                                                              |=======================                                               |  32%  |                                                                              |=======================                                               |  33%  |                                                                              |========================                                              |  34%  |                                                                              |========================                                              |  35%  |                                                                              |=========================                                             |  35%  |                                                                              |=========================                                             |  36%  |                                                                              |==========================                                            |  37%  |                                                                              |==========================                                            |  38%  |                                                                              |===========================                                           |  38%  |                                                                              |===========================                                           |  39%  |                                                                              |============================                                          |  40%  |                                                                              |============================                                          |  41%  |                                                                              |=============================                                         |  41%  |                                                                              |=============================                                         |  42%  |                                                                              |==============================                                        |  42%  |                                                                              |==============================                                        |  43%  |                                                                              |===============================                                       |  44%  |                                                                              |===============================                                       |  45%  |                                                                              |================================                                      |  45%  |                                                                              |================================                                      |  46%  |                                                                              |=================================                                     |  47%  |                                                                              |=================================                                     |  48%  |                                                                              |==================================                                    |  48%  |                                                                              |==================================                                    |  49%  |                                                                              |===================================                                   |  49%  |                                                                              |===================================                                   |  50%  |                                                                              |===================================                                   |  51%  |                                                                              |====================================                                  |  51%  |                                                                              |====================================                                  |  52%  |                                                                              |=====================================                                 |  52%  |                                                                              |=====================================                                 |  53%  |                                                                              |======================================                                |  54%  |                                                                              |======================================                                |  55%  |                                                                              |=======================================                               |  55%  |                                                                              |=======================================                               |  56%  |                                                                              |========================================                              |  57%  |                                                                              |========================================                              |  58%  |                                                                              |=========================================                             |  58%  |                                                                              |=========================================                             |  59%  |                                                                              |==========================================                            |  59%  |                                                                              |==========================================                            |  60%  |                                                                              |===========================================                           |  61%  |                                                                              |===========================================                           |  62%  |                                                                              |============================================                          |  62%  |                                                                              |============================================                          |  63%  |                                                                              |=============================================                         |  64%  |                                                                              |=============================================                         |  65%  |                                                                              |==============================================                        |  65%  |                                                                              |==============================================                        |  66%  |                                                                              |===============================================                       |  67%  |                                                                              |===============================================                       |  68%  |                                                                              |================================================                      |  68%  |                                                                              |================================================                      |  69%  |                                                                              |=================================================                     |  70%  |                                                                              |=================================================                     |  71%  |                                                                              |==================================================                    |  71%  |                                                                              |==================================================                    |  72%  |                                                                              |===================================================                   |  72%  |                                                                              |===================================================                   |  73%  |                                                                              |===================================================                   |  74%  |                                                                              |====================================================                  |  74%  |                                                                              |====================================================                  |  75%  |                                                                              |=====================================================                 |  75%  |                                                                              |=====================================================                 |  76%  |                                                                              |======================================================                |  76%  |                                                                              |======================================================                |  77%  |                                                                              |======================================================                |  78%  |                                                                              |=======================================================               |  78%  |                                                                              |=======================================================               |  79%  |                                                                              |========================================================              |  79%  |                                                                              |========================================================              |  80%  |                                                                              |=========================================================             |  81%  |                                                                              |=========================================================             |  82%  |                                                                              |==========================================================            |  82%  |                                                                              |==========================================================            |  83%  |                                                                              |===========================================================           |  84%  |                                                                              |===========================================================           |  85%  |                                                                              |============================================================          |  85%  |                                                                              |============================================================          |  86%  |                                                                              |=============================================================         |  87%  |                                                                              |=============================================================         |  88%  |                                                                              |==============================================================        |  88%  |                                                                              |==============================================================        |  89%  |                                                                              |===============================================================       |  90%  |                                                                              |===============================================================       |  91%  |                                                                              |================================================================      |  91%  |                                                                              |================================================================      |  92%  |                                                                              |=================================================================     |  92%  |                                                                              |=================================================================     |  93%  |                                                                              |==================================================================    |  94%  |                                                                              |==================================================================    |  95%  |                                                                              |===================================================================   |  95%  |                                                                              |===================================================================   |  96%  |                                                                              |====================================================================  |  97%  |                                                                              |====================================================================  |  98%  |                                                                              |===================================================================== |  98%  |                                                                              |===================================================================== |  99%  |                                                                              |======================================================================|  99%  |                                                                              |======================================================================| 100%
+
 ``` r
 daa_results_df <- pathway_daa(abundance = kegg_abundance, metadata = metadata,
                               group = "dep", daa_method = "DESeq2",
@@ -306,13 +322,34 @@ f3 <- daa_results_df[162:233, ]
 daa_paths_df1 <- pathway_annotation(pathway = "KO", daa_results_df = f1, ko_to_kegg = TRUE)
 ```
 
+    ## 
+    ## 
+    ##   |                                                                              |                                                                      |   0%  |                                                                              |===============                                                       |  22%  |                                                                              |==============================                                        |  43%  |                                                                              |==============================================                        |  65%  |                                                                              |=============================================================         |  87%  |                                                                              |======================================================================| 100%
+    ## 
+    ## 
+    ##   |                                                                              |==                                                                    |   2%  |                                                                              |===                                                                   |   4%  |                                                                              |=====                                                                 |   7%  |                                                                              |======                                                                |   9%  |                                                                              |========                                                              |  11%
+
 ``` r
 daa_paths_df2 <- pathway_annotation(pathway = "KO", daa_results_df = f2, ko_to_kegg = TRUE)
 ```
 
+    ## 
+    ## 
+    ##   |                                                                              |                                                                      |   0%  |                                                                              |===============                                                       |  21%  |                                                                              |=============================                                         |  42%  |                                                                              |============================================                          |  62%  |                                                                              |==========================================================            |  83%  |                                                                              |======================================================================| 100%
+    ## 
+    ## 
+    ##   |                                                                              |=                                                                     |   2%  |                                                                              |===                                                                   |   4%  |                                                                              |====                                                                  |   6%  |                                                                              |======                                                                |   8%  |                                                                              |=======                                                               |  10%
+
 ``` r
 daa_paths_df3 <- pathway_annotation(pathway = "KO", daa_results_df = f3, ko_to_kegg = TRUE)
 ```
+
+    ## 
+    ## 
+    ##   |                                                                              |                                                                      |   0%  |                                                                              |=====================                                                 |  29%  |                                                                              |=========================================                             |  59%  |                                                                              |==============================================================        |  88%  |                                                                              |======================================================================| 100%
+    ## 
+    ## 
+    ##   |                                                                              |==                                                                    |   3%  |                                                                              |====                                                                  |   6%  |                                                                              |======                                                                |   9%  |                                                                              |========                                                              |  12%
 
 ``` r
 daa_paths_full <- rbind(daa_paths_df1, daa_paths_df2, daa_paths_df3)
@@ -344,7 +381,7 @@ p <- pathway_errorbar(abundance = kegg_abundance,
 p
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 #### 2.2 Redesign
 
@@ -389,7 +426,7 @@ a <- ggplot(joined_df, aes(log_2_fold_change.x, pathway_name.x, color = color_gr
 a
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Second part
 
@@ -440,7 +477,7 @@ b <- ggplot(joined_df, aes(y = pathway_name.x, x = mean, fill = group)) +
 b
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 Combine plots
 
@@ -452,7 +489,7 @@ c <- ggarrange(a, b, ncol = 2, nrow = 1,
 c
 ```
 
-![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](PICRUSt_Analysis_CH4_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 ggsave(path = "~/Documents/Postgrad/Figures/June_Methane/draft2", "PICRUST2DESEQ2_Pathways.png",
